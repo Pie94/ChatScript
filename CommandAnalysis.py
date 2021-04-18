@@ -36,7 +36,7 @@ else: # set default settings if no custom settings file is found
     settings = {
         'server': 'irc.chat.twitch.tv',
         'port': 6667,
-        'nickname': nickname.,
+        'nickname': nickname,
         'channel': f'#{channel}'
     }
     with open(settings_file, "w") as write_file:
@@ -55,7 +55,6 @@ else:
     OAuth_crypt = f.encrypt(OAuth)
     with open(OAuth_file, "wb") as write_file:
         write_file.write(OAuth_crypt)
-    pass
 
 """ Connection to the IRC chat and Logging phase """
 
@@ -141,7 +140,7 @@ else:   # initialize data for every command defined in the settings.json file
 # ADD MESSAGE PARSING AND MANIPULATION
 # remember the .decode('utf-8')
 ############
-message = re.search(':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', username_message)
+# message = re.search(':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', username_message)
 
 # if command_received in commands_list:
 #             """ Increases the command counter related to the command executed """
