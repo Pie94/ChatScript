@@ -43,5 +43,7 @@ settings need to be done manually by the user in this file.
 ## CommandList file
 
 ## Resources
+- Twitch OAuth generator: https://twitchapps.com/tmi/
 - Twitch chat text stream: https://www.learndatasci.com/tutorials/how-stream-text-data-twitch-sockets-python/
 - Twitch reference guide: https://dev.twitch.tv/docs/irc
+- Encryption example through AES: https://devqa.io/encrypt-decrypt-data-python/
