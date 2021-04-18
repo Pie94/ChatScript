@@ -1,7 +1,8 @@
 # CommandAnalysis
-## Python script to analyse how many times a set of command is executed into a Twitch chat
-## By PieTheLemon
+Python script to analyse how many times a set of command is executed into a Twitch chat
+By PieTheLemon
 
+## Introduction
 Every Twitch channel has a personal chat accessible through the IRC (Internet-Relay Chat) protocol.
 This Python script exploits this connection to log the chat of a selected channel until it's closed.
 At that point, it will analyze the chat log to see how many times a command, picked from a list of
