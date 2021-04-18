@@ -3,67 +3,74 @@ import sys
 import json # to read/write json files
 import csv # to read/write csv files
 from cryptography.fernet import Fernet # to encrypt/decrypt the OAuth token
+from getpass import getpass
 import socket # to open a connection with the IRC Twitch server
 import logging # for logging the Chat strings
 import re # for strings manipulation
 
 """ Variable Definition """
+
 settings_file = 'settings.json'
 OAuth_file = 'KeyAuth'
+chat_log_file = 'ChatLog.txt'
 settings = dict()
-command_file = ''
+command_file = 'CommandList.txt'
 commands_list = []
 counter_sfx = dict()
-data_file = ''
+data_file = 'CommandCounter.csv'
 password = ''
 OAuth = ''
 
-""" Load settings file if it exists, otherwise use default settings and create a settings file """
+""" Initialization Process """
+
+""" Load settings file if it exists, otherwise use default settings,
+ and create a settings file """
 settings_file = os.path.join(os.path.dirname(__file__), settings_file)
 if os.path.isfile(settings_file):
         """ read settings """
         with open(settings_file, "r") as read_file:
             settings = json.load(read_file)      
 else: # set default settings if no custom settings file is found
+    nickname = input("Enter your Twitch nickname (lowercase): ")
+    channel = input("Enter the channel you want to connect to: ")
     settings = {
         'server': 'irc.chat.twitch.tv',
         'port': 6667,
-        'nickname': 'PieTheLemon',
-        'token': '',
-        'channel': '#PieTheLemon'
+        'nickname': nickname.,
+        'channel': f'#{channel}'
     }
     with open(settings_file, "w") as write_file:
         json.dump(settings, write_file, sort_keys=True, indent=4)
 
 """ Look for the KeyAuth file or ask for a new one """
 if os.path.isfile(OAuth_file):
+    password = getpass("Insert the password: ")
     f = Fernet(password)
     with open(OAuth_file, "rb") as read_file:
-        OAuth = f.decrypt(read_file.write(OAuth_crypt))
-    pass
-    # Prompt for password
+        OAuth = f.decrypt(read_file.read())
 else:
-    # Prompt for password
-    # Prompt for OAuth Token
+    OAuth_file = input("Enter the OAuth token: ")
+    password = getpass("Insert a password (used to access the OAuth token when stored):\n")
     f = Fernet(password)
     OAuth_crypt = f.encrypt(OAuth)
     with open(OAuth_file, "wb") as write_file:
         write_file.write(OAuth_crypt)
     pass
 
+""" Connection to the IRC chat and Logging phase """
+
 sock = socket.socket()
 # Test connection
 # try :
 #     sock.connect((settings['server'], settings['port']))
 # except 
-
 sock.send(f"PASS {settings['token']}\n".encode('utf-8'))
 sock.send(f"NICK {settings['nickname']}\n".encode('utf-8'))
 sock.send(f"JOIN {settings['channel']}\n".encode('utf-8'))
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(message)s',
-                    handlers=[logging.FileHandler('ChatLog.txt', encoding='utf-8')])
+                    handlers=[logging.FileHandler(chat_log_file, encoding='utf-8')])
 
 try:
     while True:
@@ -76,16 +83,24 @@ try:
             logging.info(resp)
 except KeyboardInterrupt:
     pass
+# Close the connection to the IRC channel
+sock.close()
 
-""" Load Commands list.
-    The command list must be a dictionary containing at least a 
+# Remove the password and OAuth variable for security reason, since they're
+# not needed anymore
+del password
+del OAuth
+
+""" Analysis of the ChatLog file """
+
+""" Load Commands list. The command list must be a dictionary containing at least a 
     'Command' Key where the command name is defined. Streamlabs Chatbot allows to export
     groups of commands information into a file with extension .abcomg which is formatted
     in JSON """
 command_file = os.path.join(os.path.dirname(__file__), 'CommandList')
 if command_file and os.path.isfile(command_file):
-    pass
-    # ADD FILE READ
+    with open(command_file,'r') as read_file:
+        commands_list = read_file.read().split()
     
 """ Load data file """
 data_file = os.path.join(os.path.dirname(__file__), 'data_counter.csv')
@@ -121,6 +136,12 @@ else:   # initialize data for every command defined in the settings.json file
         settings['Reset'] = False
         with open(settings_file, "w") as write_file:
             json.dump(settings, write_file, sort_keys=True, indent=4)
+
+############
+# ADD MESSAGE PARSING AND MANIPULATION
+# remember the .decode('utf-8')
+############
+message = re.search(':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', username_message)
 
 # if command_received in commands_list:
 #             """ Increases the command counter related to the command executed """
