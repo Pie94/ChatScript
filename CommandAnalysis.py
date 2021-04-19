@@ -24,11 +24,11 @@ OAuth = ''
 
 """ Initialization Process """
 
-""" Load settings file if it exists, otherwise use default settings,
- and create a settings file """
+# Load settings file if it exists, otherwise use default settings,
+# and create a settings file
 settings_file = os.path.join(os.path.dirname(__file__), settings_file)
 if os.path.isfile(settings_file):
-        """ read settings """
+        # read settings
         with open(settings_file, "r") as read_file:
             settings = json.load(read_file)      
 else: # set default settings if no custom settings file is found
@@ -38,12 +38,13 @@ else: # set default settings if no custom settings file is found
         'server': 'irc.chat.twitch.tv',
         'port': 6697,
         'nickname': nickname, # it must be lowercase!
-        'channel': f'#{channel}'
+        'channel': f'#{channel}',
+        'reset': False
     }
     with open(settings_file, "w") as write_file:
         json.dump(settings, write_file, sort_keys=True, indent=4)
 
-""" Look for the KeyAuth file or ask for a new one """
+# Look for the KeyAuth file or ask for a new one
 if os.path.isfile(OAuth_file):
     password = getpass("Insert the password: ")
     f = Fernet(password)
@@ -51,65 +52,88 @@ if os.path.isfile(OAuth_file):
         OAuth = f.decrypt(read_file.read())
 else:
     OAuth_file = input("Enter the OAuth token: ")
-    password = getpass("Insert a password (used to access the OAuth token when stored):\n")
+    password = getpass(
+        "Insert a password (used to access the OAuth token when stored):\n")
     f = Fernet(password)
     OAuth_crypt = f.encrypt(OAuth)
     with open(OAuth_file, "wb") as write_file:
         write_file.write(OAuth_crypt)
 
+reset_chatlog = input("Reset the Chat log? (y/n)").lower()
+counter = 0
+while reset_chatlog not in ['y', 'n']:
+    counter++
+    if counter == 3:
+        print('Too many incorrect input. Exiting!')
+        # Remove the password and OAuth variables for security reason, 
+        # since they're not needed anymore
+        del password
+        del OAuth
+        quit()
+    print('Incorrect input. Try again!')
+    reset_chatlog = input("Reset the Chat log? (y/n)").lower()
+
 """ Connection to the IRC chat and Logging phase """
 
-sock =  socket.socket(socket.AF_INET)
-context = ssl.create_default_context()
-conn = context.wrap_socket(sock, server_hostname=HOST)
-conn.connect((settings['server'],settings['port']))
-# Test connection
-# try :
-#     sock.connect((settings['server'], settings['port']))
-# except 
-conn.sendall(f"PASS {OAuth}\n".encode('utf-8'))
-conn.sendall(f"NICK {settings['nickname']}\n".encode('utf-8'))
-conn.sendall(f"JOIN {settings['channel']}\n".encode('utf-8'))
+# Connection to the IRC chat
+try:
+    sock =  socket.socket(socket.AF_INET)
+    context = ssl.create_default_context()
+    conn = context.wrap_socket(sock, server_hostname=settings['server'])
+    conn.connect((settings['server'],settings['port']))
+    conn.sendall(f"PASS {OAuth}\n".encode('utf-8'))
+    conn.sendall(f"NICK {settings['nickname']}\n".encode('utf-8'))
+    conn.sendall(f"JOIN {settings['channel']}\n".encode('utf-8'))
+except:
+    pass
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(message)s',
-                    handlers=[logging.FileHandler(chat_log_file, encoding='utf-8')])
+if reset_chatlog == 'y':
+    logging.basicConfig(level=logging.DEBUG,
+                format='%(message)s',
+                handlers=[logging.FileHandler(chat_log_file, encoding='utf-8',
+                mode='w')])
+else:
+    logging.basicConfig(level=logging.DEBUG,
+            format='%(message)s',
+            handlers=[logging.FileHandler(chat_log_file, encoding='utf-8')])
 
+
+# Logging until the CTRL + C (KeyboardInterrupt) command is given
 try:
     while True:
-        resp = sock.recv(2048).decode('utf-8')
-
-        if resp.startswith('PING'):
-            sock.send("PONG\n".encode('utf-8'))
-    
-        elif len(resp) > 0:
-            logging.info(resp)
+        msg = conn.recv(2048).decode('utf-8')
+        
+        if msg.startswith('PING'):
+            conn.sendall("PONG\n".encode('utf-8'))
+        else:
+            message = re.search(
+                ':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', msg)
+            if message:
+                logging.info(message.group(1))
 except KeyboardInterrupt:
     # Close the connection to the IRC channel
     conn.shutdown(socket.SHUT_RDWR)
     conn.close()
 
-# Remove the password and OAuth variable for security reason, since they're
+# Remove the password and OAuth variables for security reason, since they're
 # not needed anymore
 del password
 del OAuth
 
 """ Analysis of the ChatLog file """
 
-""" Load Commands list. The command list must be a dictionary containing at least a 
-    'Command' Key where the command name is defined. Streamlabs Chatbot allows to export
-    groups of commands information into a file with extension .abcomg which is formatted
-    in JSON """
-command_file = os.path.join(os.path.dirname(__file__), 'CommandList')
+# Load Commands list. The command list must be a series of commands
+# separated by spaces (e.g., "prova1 prova2 prova3")
+command_file = os.path.join(os.path.dirname(__file__), command_file)
 if command_file and os.path.isfile(command_file):
     with open(command_file,'r') as read_file:
         commands_list = read_file.read().split()
     
-""" Load data file """
-data_file = os.path.join(os.path.dirname(__file__), 'data_counter.csv')
-""" Check if the data_file exists and if the Reset mode is set """
+# Load data file
+data_file = os.path.join(os.path.dirname(__file__), data_file)
+# Check if the data_file exists and if the Reset mode is set
 if data_file and os.path.isfile(data_file) and not settings['Reset']:
-        """ read data """
+        # read data
         with open(data_file, "rb") as read_file:
             reader = csv.reader(read_file)
             next(reader, None)  # skip the header
@@ -132,10 +156,10 @@ if data_file and os.path.isfile(data_file) and not settings['Reset']:
 else:   # initialize data for every command defined in the settings.json file
     for command in commands_list:
         counter_sfx[command] = 0
-    """ If Reset is True, it sets is to False so that the next time the
-        Script starts, it won't reset again """
+    # If Reset is True, it sets is to False so that the next time the
+    # Script starts, it won't reset again
     if settings['Reset']:
-        """ Remove the Reset status """
+        # Remove the Reset status
         settings['Reset'] = False
         with open(settings_file, "w") as write_file:
             json.dump(settings, write_file, sort_keys=True, indent=4)
