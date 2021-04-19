@@ -12,13 +12,17 @@ When the script is closed, it begin by loading the Commands list and the .csv fi
 
 The list of commands that needs to be checked can be updated by adding and removing commands before/after the script has been executed; adding a new command creates a new counter, naturally set to 0; deleting a command also deletes its counter, also removing it from the .csv file the next time the user run the script.
 
+## Requirements
+List of packages required (not available by default, can be found in pip and conda):
+- pycrypto (see https://pypi.org/project/pycrypto/ for pip, https://anaconda.org/anaconda/pycrypto for Anaconda)
+
 ## File structure
 - CommandAnalysis.py: Script for the chat analysis
+- encryption.py: encription functions, used to encripy the OAuth token before saving it to a file.
 - Settings.json: Database with all the settings needed for the script. It's formatted to be human-readable since any change to the settings need to be done manually by the user in this file.
 - CommandList.txt: List of commands. It must contain a list of keywords space-separated.
 - KeyAuth: File containing the enctripted OAuth key that identifies the user accessing to the Chat.
 - ChatLog.txt: where the chat is logged
-
 ## Settings file
 The settings file is a json database, formatted to be easily readable, containing the main settings of the script:
 - server: URL adress of the IRC chat; should be left as _'irc.chat.twitch.tv'_.
@@ -38,7 +42,7 @@ Here both the space an return character count as whitespace.
 - Twitch OAuth generator: https://twitchapps.com/tmi/
 - Twitch chat text stream: https://www.learndatasci.com/tutorials/how-stream-text-data-twitch-sockets-python/
 - Twitch reference guide: https://dev.twitch.tv/docs/irc
-- Encryption example through AES: https://devqa.io/encrypt-decrypt-data-python/
+- Encryption functions with a password: https://stackoverflow.com/questions/42568262/how-to-encrypt-text-with-a-password-in-python
 - RegExpr: https://docs.python.org/3/library/re.html#match-objects
 - SSL wrapper for Python: https://docs.python.org/3/library/ssl.html
 - logging module for Python: https://docs.python.org/3/library/logging.html

@@ -8,6 +8,7 @@ import socket # to open a connection with the IRC Twitch server
 import ssl # to create 
 import logging # for logging the Chat strings
 import re # for strings search
+import encription # contains the encription functions
 
 """ Variable Definition """
 
@@ -47,16 +48,14 @@ else: # set default settings if no custom settings file is found
 # Look for the KeyAuth file or ask for a new one
 if os.path.isfile(OAuth_file):
     password = getpass("Insert the password: ")
-    f = Fernet(password)
-    with open(OAuth_file, "rb") as read_file:
-        OAuth = f.decrypt(read_file.read())
+    with open(OAuth_file, "r") as read_file:
+        OAuth = encription.decrypt(password, read_file.read())
 else:
-    OAuth_file = input("Enter the OAuth token: ")
+    OAuth = input("Enter the OAuth token: ")
     password = getpass(
         "Insert a password (used to access the OAuth token when stored):\n")
-    f = Fernet(password)
-    OAuth_crypt = f.encrypt(OAuth)
-    with open(OAuth_file, "wb") as write_file:
+    OAuth_crypt = encription.encrypt(password, OAuth)
+    with open(OAuth_file, "w") as write_file:
         write_file.write(OAuth_crypt)
 
 reset_chatlog = input("Reset the Chat log? (y/n)").lower()
@@ -169,7 +168,7 @@ else:   # initialize data for every command defined in the settings.json file
 # iterate through all its lines
 with open(chat_log_file,'r') as log:
     for line in log:
-        command = line.split(0).lower()
+        command = line.split()[0].lower()
         if command in commands_list:
              counter_sfx[command] += 1
 
