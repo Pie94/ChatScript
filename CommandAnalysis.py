@@ -164,14 +164,14 @@ else:   # initialize data for every command defined in the settings.json file
         with open(settings_file, "w") as write_file:
             json.dump(settings, write_file, sort_keys=True, indent=4)
 
-############
-# ADD MESSAGE PARSING AND MANIPULATION
-# remember the .decode('utf-8')
-############
-# message = re.search(':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', username_message)
-# if command_received in commands_list:
-#             """ Increases the command counter related to the command executed """
-#             counter_sfx[command_received] += 1
+# ChatLog parsing and counter increment if a command has been inserted
+# the opened file (log variable) is an iterable object, so I can
+# iterate through all its lines
+with open(chat_log_file,'r') as log:
+    for line in log:
+        command = line.split(0).lower()
+        if command in commands_list:
+             counter_sfx[command] += 1
 
 #   Sorting the counters
 #   Extracting the keys and counters from the dictionary counter_sfx
