@@ -30,7 +30,7 @@ The settings file is a json database, formatted to be easily readable, containin
 The CommandList file contains a list of commands separated by whitespaces. The commands will be considered as not case-sensitive, so that _prova1_ and _Prova1_ will be counted in the same way.
 
 E.g. of the file content:
-prova1 prova2
+prova1 prova2  
 prova3 prova4 prova5 prova6
 
 Here both the space an return character count as whitespace.
