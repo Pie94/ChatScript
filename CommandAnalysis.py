@@ -7,7 +7,7 @@ from getpass import getpass
 import socket # to open a connection with the IRC Twitch server
 import ssl # to create 
 import logging # for logging the Chat strings
-import re # for strings manipulation
+import re # for strings search
 
 """ Variable Definition """
 
@@ -62,16 +62,21 @@ else:
 reset_chatlog = input("Reset the Chat log? (y/n)").lower()
 counter = 0
 while reset_chatlog not in ['y', 'n']:
-    counter++
+    counter += 1
     if counter == 3:
-        print('Too many incorrect input. Exiting!')
-        # Remove the password and OAuth variables for security reason, 
-        # since they're not needed anymore
-        del password
-        del OAuth
-        quit()
+        sys.exit('Incorrect input at chat log reset')
     print('Incorrect input. Try again!')
     reset_chatlog = input("Reset the Chat log? (y/n)").lower()
+
+# Load Commands list. The command list must be a series of commands
+# separated by spaces (e.g., "prova1 prova2 prova3")
+command_file = os.path.join(os.path.dirname(__file__), command_file)
+if command_file and os.path.isfile(command_file):
+    with open(command_file,'r') as read_file:
+        commands_list = read_file.read().split()
+else:
+    # print('CommandList not found, exiting!')
+    sys.exit('CommandList file not found')
 
 """ Connection to the IRC chat and Logging phase """
 
@@ -85,7 +90,9 @@ try:
     conn.sendall(f"NICK {settings['nickname']}\n".encode('utf-8'))
     conn.sendall(f"JOIN {settings['channel']}\n".encode('utf-8'))
 except:
-    pass
+    del password
+    del OAuth
+    sys.exit('Connection error!')
 
 if reset_chatlog == 'y':
     logging.basicConfig(level=logging.DEBUG,
@@ -121,13 +128,6 @@ del password
 del OAuth
 
 """ Analysis of the ChatLog file """
-
-# Load Commands list. The command list must be a series of commands
-# separated by spaces (e.g., "prova1 prova2 prova3")
-command_file = os.path.join(os.path.dirname(__file__), command_file)
-if command_file and os.path.isfile(command_file):
-    with open(command_file,'r') as read_file:
-        commands_list = read_file.read().split()
     
 # Load data file
 data_file = os.path.join(os.path.dirname(__file__), data_file)
