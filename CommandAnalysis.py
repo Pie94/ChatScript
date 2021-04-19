@@ -5,6 +5,7 @@ import csv # to read/write csv files
 from cryptography.fernet import Fernet # to encrypt/decrypt the OAuth token
 from getpass import getpass
 import socket # to open a connection with the IRC Twitch server
+import ssl # to create 
 import logging # for logging the Chat strings
 import re # for strings manipulation
 
@@ -35,8 +36,8 @@ else: # set default settings if no custom settings file is found
     channel = input("Enter the channel you want to connect to: ")
     settings = {
         'server': 'irc.chat.twitch.tv',
-        'port': 6667,
-        'nickname': nickname,
+        'port': 6697,
+        'nickname': nickname, # it must be lowercase!
         'channel': f'#{channel}'
     }
     with open(settings_file, "w") as write_file:
@@ -58,14 +59,17 @@ else:
 
 """ Connection to the IRC chat and Logging phase """
 
-sock = socket.socket()
+sock =  socket.socket(socket.AF_INET)
+context = ssl.create_default_context()
+conn = context.wrap_socket(sock, server_hostname=HOST)
+conn.connect((settings['server'],settings['port']))
 # Test connection
 # try :
 #     sock.connect((settings['server'], settings['port']))
 # except 
-sock.send(f"PASS {settings['token']}\n".encode('utf-8'))
-sock.send(f"NICK {settings['nickname']}\n".encode('utf-8'))
-sock.send(f"JOIN {settings['channel']}\n".encode('utf-8'))
+conn.sendall(f"PASS {OAuth}\n".encode('utf-8'))
+conn.sendall(f"NICK {settings['nickname']}\n".encode('utf-8'))
+conn.sendall(f"JOIN {settings['channel']}\n".encode('utf-8'))
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(message)s',
@@ -81,9 +85,9 @@ try:
         elif len(resp) > 0:
             logging.info(resp)
 except KeyboardInterrupt:
-    pass
-# Close the connection to the IRC channel
-sock.close()
+    # Close the connection to the IRC channel
+    conn.shutdown(socket.SHUT_RDWR)
+    conn.close()
 
 # Remove the password and OAuth variable for security reason, since they're
 # not needed anymore
@@ -141,7 +145,6 @@ else:   # initialize data for every command defined in the settings.json file
 # remember the .decode('utf-8')
 ############
 # message = re.search(':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', username_message)
-
 # if command_received in commands_list:
 #             """ Increases the command counter related to the command executed """
 #             counter_sfx[command_received] += 1

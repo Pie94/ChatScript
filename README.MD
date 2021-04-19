@@ -1,6 +1,5 @@
 # CommandAnalysis
-Python script to analyse how many times a set of command is executed into a Twitch chat
-By PieTheLemon
+Python script to analyse how many times a set of command is executed into a Twitch chat.
 
 ## Introduction
 Every Twitch channel has a personal chat accessible through the IRC (Internet-Relay Chat) protocol. This Python script exploits this connection to log the chat of a selected channel until it's closed. At that point, it will analyze the chat log to see how many times a command, picked from a list of command specified in a particular file, is executed in that Twitch chat. These counters are then saved in a .csv files, with the counters sorted by decreasing values.
@@ -22,7 +21,10 @@ The list of commands that need to be checked can be updated by adding and removi
 
 ## Settings file
 The settings file is a json database, formatted to be easily readable, containing the main settings of the script:
-- nick: The Twitch username (login name) in lowercase related to the OAuth Token
+- server: URL adress of the IRC chat; should be left as _'irc.chat.twitch.tv'_.
+- port: Port adress of the IRC service. It should be 6697 for the SSL encrypted connection.
+- nickname: the user's nickname, related to the OAuth key. It must be lowercase!
+- channel: channel name you want to connect to. It should be formatted as _#channelname_ (e.g., #piethelemon).
 ## CommandList file
 
 ## Resources
