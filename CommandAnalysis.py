@@ -8,7 +8,7 @@ import socket # to open a connection with the IRC Twitch server
 import ssl # to create 
 import logging # for logging the Chat strings
 import re # for strings search
-import encription # contains the encription functions
+import encryption # contains the encryption functions
 
 """ Variable Definition """
 
@@ -47,25 +47,31 @@ else: # set default settings if no custom settings file is found
 
 # Look for the KeyAuth file or ask for a new one
 if os.path.isfile(OAuth_file):
-    password = getpass("Insert the password: ")
-    with open(OAuth_file, "r") as read_file:
-        OAuth = encription.decrypt(password, read_file.read())
+    try:
+        password = getpass("Insert the password: ")
+        with open(OAuth_file, "r") as read_file:
+            OAuth = encryption.decrypt(password.encode('utf-8'), read_file.read()).decode('utf-8')
+    except ValueError:
+        sys.exit('\nWrong password!')
 else:
     OAuth = input("Enter the OAuth token: ")
     password = getpass(
         "Insert a password (used to access the OAuth token when stored):\n")
-    OAuth_crypt = encription.encrypt(password, OAuth)
+    OAuth_crypt = encryption.encrypt(password.encode('utf-8'), OAuth.encode('utf-8'))
     with open(OAuth_file, "w") as write_file:
         write_file.write(OAuth_crypt)
 
-reset_chatlog = input("Reset the Chat log? (y/n)").lower()
-counter = 0
-while reset_chatlog not in ['y', 'n']:
-    counter += 1
-    if counter == 3:
-        sys.exit('Incorrect input at chat log reset')
-    print('Incorrect input. Try again!')
-    reset_chatlog = input("Reset the Chat log? (y/n)").lower()
+reset_chatlog = 'n'
+if os.path.isfile(chat_log_file):
+    reset_chatlog = input("Reset the Chat log? (y/n)\n").lower()
+    counter = 0
+    while reset_chatlog not in ['y', 'n']:
+        counter += 1
+        if counter == 3:
+            sys.exit('Incorrect input at chat log reset')
+        print('Incorrect input. Try again!')
+        reset_chatlog = input("Reset the Chat log? (y/n)").lower()
+
 
 # Load Commands list. The command list must be a series of commands
 # separated by spaces (e.g., "prova1 prova2 prova3")
@@ -74,8 +80,7 @@ if command_file and os.path.isfile(command_file):
     with open(command_file,'r') as read_file:
         commands_list = read_file.read().split()
 else:
-    # print('CommandList not found, exiting!')
-    sys.exit('CommandList file not found')
+    sys.exit('\nCommandList file not found. Exiting!')
 
 """ Connection to the IRC chat and Logging phase """
 
@@ -88,10 +93,11 @@ try:
     conn.sendall(f"PASS {OAuth}\n".encode('utf-8'))
     conn.sendall(f"NICK {settings['nickname']}\n".encode('utf-8'))
     conn.sendall(f"JOIN {settings['channel']}\n".encode('utf-8'))
-except:
+except Exception as e:
+    print(f'\nConnection error:\n{e}')
     del password
     del OAuth
-    sys.exit('Connection error!')
+    sys.exit()
 
 if reset_chatlog == 'y':
     logging.basicConfig(level=logging.DEBUG,
@@ -131,9 +137,9 @@ del OAuth
 # Load data file
 data_file = os.path.join(os.path.dirname(__file__), data_file)
 # Check if the data_file exists and if the Reset mode is set
-if data_file and os.path.isfile(data_file) and not settings['Reset']:
+if data_file and os.path.isfile(data_file) and not settings['reset']:
         # read data
-        with open(data_file, "rb") as read_file:
+        with open(data_file, "r") as read_file:
             reader = csv.reader(read_file)
             next(reader, None)  # skip the header
             for row in reader:
@@ -157,9 +163,9 @@ else:   # initialize data for every command defined in the settings.json file
         counter_sfx[command] = 0
     # If Reset is True, it sets is to False so that the next time the
     # Script starts, it won't reset again
-    if settings['Reset']:
+    if settings['reset']:
         # Remove the Reset status
-        settings['Reset'] = False
+        settings['reset'] = False
         with open(settings_file, "w") as write_file:
             json.dump(settings, write_file, sort_keys=True, indent=4)
 
@@ -187,7 +193,7 @@ keys = [x for _, x in sorted(zip(counters, keys), reverse=True)]
 #   Sorting the counters value
 
 #   Writing the sorted counters in the .csv file
-with open(data_file, "wb") as write_file:
+with open(data_file, "w") as write_file:
     writer = csv.writer(write_file)
     writer.writerow(["Command", "Counter"])
     for key in keys:
