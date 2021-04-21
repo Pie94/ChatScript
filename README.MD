@@ -8,9 +8,9 @@ When opened, the program ask the user OAth key if not present. This key is an al
 
 The first part of the script connect to the desired Twitch chat and start logging it. The selected channel (and other settings) can be inserted in the settings file. The log is managed by the **logging** module. Every once in a while, the script answer to a PING-PONG kind of check done by the Twitch IRC server to see if the script is still connected. The connection is wrapped in a SSL socket to ensure some form of encryption (since the OAuth key is sent to the server).
 
-When the script is closed, it begin by loading the Commands list and the .csv file to get the actual value of the counters, i.e. the script is able to store the counters and keep counting in different streams. Then the script analyses the saved log and check for every message if the first word of a message is one of the commands written in the Command list file. For every command encountered, the relative counter is incremented. When the script has parsed the whole chat log, it sorts the counters ordered by decreasing values and export it to the .csv file, updating the values inside it.
+The logging fase can be interrupted by pressing CTRL + C (aka KeyboardInterrupt). Then the script loads the Commands list and the .csv file (if available) to get the actual value of the counters, i.e. the script is able to store the counters and keep counting in different streams. After that, the script analyse the saved log and check if every message's first word is one of the commands written in the Command list file. For every command encounter, the relative counter is incremented. When the script has parsed the whole chat log, it sorts the counters ordered by decreasing values and export it to the .csv file, updating the values inside it.
 
-The list of commands that needs to be checked can be updated by adding and removing commands before/after the script has been executed; adding a new command creates a new counter, naturally set to 0; deleting a command also deletes its counter, also removing it from the .csv file the next time the user run the script.
+The list of commands that needs to be checked can be updated by adding and removing commands when the script is not running. Adding a new command creates a new counter, naturally set to 0, while deleting a command also deletes its counter, also removing it from the .csv file the next time the user run the script.
 
 ## Requirements
 List of packages required (not available by default in Anaconda and probably on Python vanilla):
@@ -31,7 +31,7 @@ The settings file is a json database, formatted to be easily readable, containin
 - port: Port adress of the IRC service. It should be 6697 for the SSL encrypted connection.
 - nickname: the user's nickname, related to the OAuth key. It must be lowercase!
 - channel: channel name you want to connect to. It should be formatted as _#channelname_ (e.g., #piethelemon).
-- reset: if set to true, the script reset all the counter in the CommandCounter.csv file. Then it set itself to False, so that the script won't reset itself the next time it will be executed.
+- reset: if set to **true**, the script reset all the counter in the CommandCounter.csv file, then it set itself to false, so that the script won't reset itself the next time it will be executed; if set to **false**, the script will read all the counters saved in CommandCounter.csv if is available and use those values.
 ## CommandList file
 The CommandList file contains a list of commands separated by whitespaces. The commands will be considered as not case-sensitive, so that _prova1_ and _Prova1_ will be counted in the same way.
 
