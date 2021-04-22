@@ -40,7 +40,11 @@ prova1 prova2
 prova3 prova4 prova5 prova6
 
 Here both the space an return character count as whitespace.
-## Resources
+
+# ToDo
+- Ask for user and channel name to ease the user experience (in that case, there won't be no need to change the settings file)
+
+# Resources
 - Twitch OAuth generator: https://twitchapps.com/tmi/
 - Twitch chat text stream: https://www.learndatasci.com/tutorials/how-stream-text-data-twitch-sockets-python/
 - Twitch reference guide: https://dev.twitch.tv/docs/irc
