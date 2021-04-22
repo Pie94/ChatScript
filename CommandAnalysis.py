@@ -25,21 +25,20 @@ OAuth = ''
 
 """ Initialization Process """
 
+channel = input("Enter the channel name you want to connect to: ").lower()
 # Load settings file if it exists, otherwise use default settings,
 # and create a settings file
 settings_file = os.path.join(os.path.dirname(__file__), settings_file)
 if os.path.isfile(settings_file):
         # read settings
         with open(settings_file, "r") as read_file:
-            settings = json.load(read_file)      
+            settings = json.load(read_file)
 else: # set default settings if no custom settings file is found
-    nickname = input("Enter your Twitch nickname (lowercase): ")
-    channel = input("Enter the channel you want to connect to: ")
+    nickname = input("Enter your Twitch nickname: ").lower() # it must be lowercase!
     settings = {
         'server': 'irc.chat.twitch.tv',
         'port': 6697,
-        'nickname': nickname, # it must be lowercase!
-        'channel': f'#{channel}',
+        'nickname': nickname,
         'reset': False
     }
     with open(settings_file, "w") as write_file:
@@ -92,7 +91,7 @@ try:
     conn.connect((settings['server'],settings['port']))
     conn.sendall(f"PASS {OAuth}\n".encode('utf-8'))
     conn.sendall(f"NICK {settings['nickname']}\n".encode('utf-8'))
-    conn.sendall(f"JOIN {settings['channel']}\n".encode('utf-8'))
+    conn.sendall(f"JOIN #{channel}\n".encode('utf-8'))
 except Exception as e:
     print(f'\nConnection error:\n{e}')
     del password
@@ -101,9 +100,9 @@ except Exception as e:
 
 if reset_chatlog == 'y':
     logging.basicConfig(level=logging.DEBUG,
-                format='%(message)s',
-                handlers=[logging.FileHandler(chat_log_file, encoding='utf-8',
-                mode='w')])
+            format='%(message)s',
+            handlers=[logging.FileHandler(chat_log_file, encoding='utf-8',
+            mode='w')])
 else:
     logging.basicConfig(level=logging.DEBUG,
             format='%(message)s',
@@ -114,14 +113,12 @@ else:
 try:
     while True:
         msg = conn.recv(2048).decode('utf-8')
+        print(msg)
         
         if msg.startswith('PING'):
             conn.sendall("PONG\n".encode('utf-8'))
-        else:
-            message = re.search(
-                ':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', msg)
-            if message:
-                logging.info(message.group(1))
+        elif len(msg) > 0:
+                logging.info(msg)
 except KeyboardInterrupt:
     # Close the connection to the IRC channel
     conn.shutdown(socket.SHUT_RDWR)
@@ -148,7 +145,7 @@ if data_file and os.path.isfile(data_file) and not settings['reset']:
         # Check if a command has been deleted from the commands list
         # If a command from the database is not in the command list anymore,
         # it's value is cancelled
-        for key in counter_sfx.keys():
+        for key in list(counter_sfx.keys()):
             if key not in commands_list:
                 counter_sfx.pop(key)
         
@@ -174,9 +171,12 @@ else:   # initialize data for every command defined in the settings.json file
 # iterate through all its lines
 with open(chat_log_file,'r') as log:
     for line in log:
-        command = line.split()[0].lower()
-        if command in commands_list:
-             counter_sfx[command] += 1
+        message = re.search(
+                ':.*\!.*@.*\.tmi\.twitch\.tv PRIVMSG #.* :(.*)', line)
+        if message:
+            command = message.group(1).split()[0].lower()
+            if command in commands_list:
+                counter_sfx[command] += 1
 
 #   Sorting the counters
 #   Extracting the keys and counters from the dictionary counter_sfx

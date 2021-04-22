@@ -4,3 +4,4 @@ KeyAuth
 ChatLog.txt
 __pycache__/encription.cpython-38.pyc
 CommandCounter.csv
+CommandList.txt
