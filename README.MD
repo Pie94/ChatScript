@@ -43,6 +43,7 @@ Here both the space an return character count as whitespace.
 
 # ToDo
 - Ask for user and channel name to ease the user experience (in that case, there won't be no need to change the settings file)
+- Final test
 
 # Resources
 - Twitch OAuth generator: https://twitchapps.com/tmi/
