@@ -2,7 +2,6 @@ import os
 import sys
 import json # to read/write json files
 import csv # to read/write csv files
-from cryptography.fernet import Fernet # to encrypt/decrypt the OAuth token
 from getpass import getpass
 import socket # to open a connection with the IRC Twitch server
 import ssl # to create 
