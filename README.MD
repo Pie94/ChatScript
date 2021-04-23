@@ -42,9 +42,6 @@ prova3 prova4 prova5 prova6
 
 Here both the space an return character count as whitespace.
 
-# ToDo
-- Final test
-
 # Resources
 - Twitch OAuth generator: https://twitchapps.com/tmi/
 - Twitch chat text stream: https://www.learndatasci.com/tutorials/how-stream-text-data-twitch-sockets-python/
